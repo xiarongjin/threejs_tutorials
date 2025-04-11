@@ -1,0 +1,29 @@
+{
+  "name": "demo",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "deploy": "tsc && vite build gh-pages -d ./dist"
+  },
+  "devDependencies": {
+    "@types/dat.gui": "^0.7.13",
+    "@types/three": "^0.175.0",
+    "dat.gui": "^0.7.9",
+    "three": "^0.175.0",
+    "typescript": "~5.7.2",
+    "vite": "^6.2.0"
+  },
+  "dependencies": {
+    "@dimforge/rapier2d": "*",
+    "@dimforge/rapier2d-compat": "^0.15.0",
+    "@dimforge/rapier3d-compat": "^0.15.1",
+    "gh-pages": "^6.3.0",
+    "pixi-viewport": "^6.0.3",
+    "pixi.js": "^8.9.1",
+    "vite-plugin-wasm": "^3.4.1"
+  }
+}
