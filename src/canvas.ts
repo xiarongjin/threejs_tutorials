@@ -14,7 +14,7 @@ export const initCanvas = async () => {
     let gravity = new RAPIER.Vector2(0.0, g * scaleFactor) //Band-aid solution for slow gravity bug
     let world = new RAPIER.World(gravity)
 
-    const sprites = []
+    const sprites: any[] = []
 
     //Rapier ground block (static)
     let groundBodyDesc = RAPIER.RigidBodyDesc.fixed().setTranslation(
@@ -92,7 +92,7 @@ export const initCanvas = async () => {
     }
 
     // Create the cursor object
-    let goal = null
+    let goal: RAPIER.Vector | null | undefined = null
     const direction = { x: 0, y: 0 }
     const cursorBody = world.createRigidBody(
       RAPIER.RigidBodyDesc.newDynamic().setTranslation(0, 0)
@@ -114,7 +114,7 @@ export const initCanvas = async () => {
     const app = new Application()
     await app.init({ width: windowSizeX, height: windowSizeY })
 
-    document.body.querySelector('#myCanvas').appendChild(app.canvas)
+    document.body.querySelector('#myCanvas')!.appendChild(app.canvas)
 
     let graphic = new Graphics()
     app.stage.addChild(graphic)
@@ -126,7 +126,11 @@ export const initCanvas = async () => {
     const ColliderMap = new Map()
 
     //Loop through rapier coliders and create set key value pair for each in ColliderMap
-    function addCollider(RAPIER, world, collider) {
+    function addCollider(
+      RAPIER: typeof import('@dimforge/rapier2d-compat/exports'),
+      world: RAPIER.World,
+      collider: RAPIER.Collider
+    ) {
       let type = 'UNKNOWN'
       let rad = 0
       let sizeX = 0
@@ -161,23 +165,25 @@ export const initCanvas = async () => {
     }
 
     //Render each object in ColliderMap in PixiJS graphics
-    function render(world, ColliderMap) {
+    function render(world: RAPIER.World, ColliderMap: any[] | Map<any, any>) {
       let cntr = 0
-      ColliderMap.forEach((el) => {
-        if (el.type == 'BALL') {
-          graphic.fill(0x0000ff)
-          let curr = sprites[cntr]
-          cntr = (cntr + 1) % numBodies
-          curr.position.x = el.xLoc + 100
-          curr.position.y = -el.yLoc + 100
-          curr.rotation = el.rotation
-          curr.pivot.set(curr.width / 2, curr.height / 2)
+      ColliderMap.forEach(
+        (el: { type: string; xLoc: number; yLoc: number; rotation: any }) => {
+          if (el.type == 'BALL') {
+            graphic.fill(0x0000ff)
+            let curr = sprites[cntr]
+            cntr = (cntr + 1) % numBodies
+            curr.position.x = el.xLoc + 100
+            curr.position.y = -el.yLoc + 100
+            curr.rotation = el.rotation
+            curr.pivot.set(curr.width / 2, curr.height / 2)
+          }
         }
-      })
+      )
     }
 
     //Update ColliderMap positions called each step
-    function updatePositions(world) {
+    function updatePositions(world: RAPIER.World) {
       // If our cursor has been on the page, then goal exists
       if (goal) {
         const cursorPosition = cursorBody.translation()
@@ -206,23 +212,25 @@ export const initCanvas = async () => {
       )
       cursorCollider.setActiveHooks(RAPIER.ActiveHooks.FILTER_CONTACT_PAIRS)
 
-      world.forEachCollider((elt) => {
-        let CMapHandle = ColliderMap.get(elt.handle)
-        let translation = elt.translation()
-        let rotation = elt.rotation()
-        if (!!CMapHandle) {
-          CMapHandle.xLoc = translation.x
-          CMapHandle.yLoc = translation.y
-          CMapHandle.rotation = -rotation
+      world.forEachCollider(
+        (elt: { handle: any; translation: () => any; rotation: () => any }) => {
+          let CMapHandle = ColliderMap.get(elt.handle)
+          let translation = elt.translation()
+          let rotation = elt.rotation()
+          if (!!CMapHandle) {
+            CMapHandle.xLoc = translation.x
+            CMapHandle.yLoc = translation.y
+            CMapHandle.rotation = -rotation
+          }
         }
-      })
+      )
     }
 
     //Game loop
     function update() {
       graphic.clear()
       render(world, ColliderMap)
-      updatePositions(world, ColliderMap)
+      updatePositions(world)
       world.step()
       requestAnimationFrame(update)
     }

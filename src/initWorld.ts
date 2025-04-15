@@ -1,4 +1,4 @@
-import RAPIER from '@dimforge/rapier2d-compat'
+// import RAPIER from '@dimforge/rapier2d-compat'
 
 export const initWorld = async () => {
   // RAPIER.init().then(() => {
