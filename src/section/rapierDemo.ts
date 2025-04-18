@@ -6,7 +6,7 @@ import { lerp, lightHelperControl, RapierDebugRenderer } from './utils'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 await RAPIER.init() // This line is only needed if using the compat version
-const g = -9.8
+const g = -9.8 * 3
 const initialGravity = { x: 0.0, y: g, z: 0.0 }
 
 let world = new RAPIER.World(initialGravity)
@@ -21,13 +21,13 @@ const camera = new THREE.PerspectiveCamera(
   45,
   window.innerWidth / window.innerHeight,
   0.1,
-  700
+  1000
 )
 
-camera.position.set(0, 172, 202)
-camera.scale.set(0.5, 0.5, 0.5)
-camera.rotation.set(10.36, 10.55, 10.02)
-camera.lookAt(0, 0, 0)
+camera.position.set(0, 300, 220)
+camera.scale.set(13.7, 13.7, 13.7)
+camera.rotation.set(-0.7, 0, 0)
+camera.lookAt(-0, -80, -80)
 
 // const gui = new GUI()
 const data = {
@@ -74,8 +74,9 @@ window.addEventListener('resize', () => {
 })
 
 const controls = new OrbitControls(camera, renderer.domElement)
-controls.enableDamping = true
-controls.target.y = 1
+controls.enabled = false
+// controls.enableDamping = false
+// controls.target.y = 1
 
 // Ball Collider
 // new THREE.Mesh(geometry, new THREE.MeshNormalMaterial({ flatShading: true })),
@@ -90,15 +91,15 @@ scene.add(sphereMesh)
 
 let sphereBody = world.createRigidBody(
   RAPIER.RigidBodyDesc.dynamic()
-    .setTranslation(0, 2, 20)
+    .setTranslation(0, 2, 60)
     .setLinearDamping(0.1) // 添加线性阻尼
     .setAngularDamping(0.5) // 添加角阻尼
     .setCcdEnabled(true)
 )
 const sphereShape = RAPIER.ColliderDesc.ball(2)
   .setMass(2)
-  .setRestitution(1.7)
-  .setFriction(0.3)
+  .setRestitution(0.34)
+  .setFriction(1)
 const ballCollider = world.createCollider(sphereShape, sphereBody)
 dynamicBodies.push([sphereMesh, sphereBody])
 
@@ -106,16 +107,35 @@ dynamicBodies.push([sphereMesh, sphereBody])
 const textureLoader = new THREE.TextureLoader()
 const texture = textureLoader.load('img/grid.png')
 
+const floorData = {
+  width: 300,
+  height: 1,
+  depth: 300,
+  x: 0,
+  y: 0,
+  z: 0,
+  rotationX: 0,
+  rotationY: 0,
+  rotationZ: 0,
+  friction: 100, // 摩擦系数
+  restitution: 0.3 // 弹性系数
+}
+
+const floorGeometry = new THREE.BoxGeometry(
+  floorData.width,
+  floorData.height,
+  floorData.depth
+) // 长、高、宽
+
+const floorMaterial = new THREE.MeshStandardMaterial({
+  map: texture,
+  roughness: 0.8, // 添加粗糙度
+  metalness: 0.2, // 添加金属度
+  side: THREE.DoubleSide // 确保双面可见
+})
+
 // 地板视图
-let floorMesh = new THREE.Mesh(
-  new THREE.BoxGeometry(190, 2, 190),
-  new THREE.MeshStandardMaterial({
-    map: texture,
-    roughness: 0.8, // 添加粗糙度
-    metalness: 0.2, // 添加金属度
-    side: THREE.DoubleSide // 确保双面可见
-  })
-)
+let floorMesh = new THREE.Mesh(floorGeometry, floorMaterial)
 
 floorMesh.receiveShadow = true
 floorMesh.position.y = 0
@@ -127,60 +147,84 @@ const floorBody = world.createRigidBody(
 )
 
 // 为刚体添加碰撞器
-const floorColliderDesc = RAPIER.ColliderDesc.cuboid(95, 1, 95)
-  .setFriction(1000)
-  .setRestitution(0.01) // 草地弹性弱
+const floorColliderDesc = RAPIER.ColliderDesc.cuboid(
+  floorData.width / 2,
+  floorData.height / 2,
+  floorData.depth / 2
+)
+  .setFriction(floorData.friction)
+  .setRestitution(floorData.restitution)
 const floorCollider = world.createCollider(floorColliderDesc, floorBody)
 floorMesh.userData.rigidBody = floorBody
 
 // 围板视图
-const geometry = new THREE.BoxGeometry(190, 50, 0.5) // 长、高、宽
-const material = new THREE.MeshBasicMaterial({
+
+const wallData = {
+  width: 300,
+  height: 300,
+  depth: 0.5,
+  x: 0,
+  y: -100,
+  z: -125,
+  rotationX: 0,
+  rotationY: 0,
+  rotationZ: 0,
+  friction: 1, // 摩擦系数
+  restitution: 0.34 // 弹性系数
+}
+
+const wallGeometry = new THREE.BoxGeometry(
+  wallData.width,
+  wallData.height,
+  wallData.depth
+) // 长、高、宽
+
+const wallMaterial = new THREE.MeshBasicMaterial({
   map: texture
   // specular: 0x333333,
   // shininess: 100
   // opacity: 1
 }) // 绿色材质
-const wallMesh = new THREE.Mesh(geometry, material)
-wallMesh.position.set(0, -1, -95)
+const wallMesh = new THREE.Mesh(wallGeometry, wallMaterial)
+
+// wallMesh.receiveShadow = true
+wallMesh.position.set(wallData.x, wallData.y, wallData.z)
+wallMesh.rotation.set(
+  wallData.rotationX,
+  wallData.rotationY,
+  wallData.rotationZ
+)
 scene.add(wallMesh)
 
 // 创建物理世界中的围板固定刚体
 const wallRigidBody = world.createRigidBody(
-  RAPIER.RigidBodyDesc.fixed().setTranslation(0, -1, -95)
+  RAPIER.RigidBodyDesc.fixed().setTranslation(
+    wallData.x,
+    wallData.y,
+    wallData.z
+  )
 )
 
 // 为围板添加碰撞器
-const wallColliderDesc = RAPIER.ColliderDesc.cuboid(95, 25, 0.5)
-  .setFriction(0.8)
-  .setRestitution(0.3)
+const wallColliderDesc = RAPIER.ColliderDesc.cuboid(
+  wallData.width / 2,
+  wallData.height / 2,
+  wallData.depth / 2
+)
+  .setFriction(wallData.friction)
+  .setRestitution(wallData.restitution)
 const wallCollider = world.createCollider(wallColliderDesc, wallRigidBody)
 
-// 将物理刚体与网格关联
-// wallMesh.userData.rigidBody = wallRigidBody
+/// 球门参数
+const goalData = {
+  width: 100, // 球门宽度
+  height: 30, // 球门高度
+  postRadius: 1.5, // 门柱半径
+  position: { x: 0, y: 0, z: -80 } // 球门位置
+}
 
 const raycaster = new THREE.Raycaster()
 const mouse = new THREE.Vector2()
-
-function getBallAngularVelocity(ballBody: RAPIER.RigidBody) {
-  if (ballBody) {
-    const angularVel = ballBody.linvel()
-    console.log('角速度:', {
-      x: angularVel.x, // 绕 X 轴旋转速度
-      y: angularVel.y, // 绕 Y 轴旋转速度
-      z: angularVel.z // 绕 Z 轴旋转速度
-    })
-    return angularVel
-  }
-  return null
-}
-// const gui = new GUI()
-// lightHelperControl(directionalLight, data, scene, gui)
-
-// 创建事件
-// let myEvent = new CustomEvent('ballCollision', {
-//   detail: { msg: 'ballCollision' }
-// })
 
 // 监听事件
 // 在创建球体和墙体后添加碰撞检测
@@ -205,82 +249,97 @@ function checkBallWallCollision() {
 
 const addBallCollisionListener = (
   eventName: 'ballWallCollision' | 'ballFloorCollision',
-  callBack: (e: { target: RAPIER.Collider }) => void
+  callBack: (e: { target: RAPIER.Collider }) => void,
+  isOnce: boolean = true
 ) => {
   const ballCollisionLinstener = (
     e: CustomEvent<{ target: RAPIER.Collider }>
   ) => {
     const event = e
     callBack(event.detail)
-    window.removeEventListener(
-      eventName,
-      ballCollisionLinstener as EventListener
-    )
+    if (isOnce) {
+      window.removeEventListener(
+        eventName,
+        ballCollisionLinstener as EventListener
+      )
+    }
   }
   window.addEventListener(eventName, ballCollisionLinstener as EventListener)
 }
 
 let canClick = true
 renderer.domElement.addEventListener('click', (e) => {
-  if (!canClick) return
-  canClick = false
-  // mouse.set(
-  //   (e.clientX / renderer.domElement.clientWidth) * 2 - 1,
-  //   -(e.clientY / renderer.domElement.clientHeight) * 2 + 1
-  // )
-  // raycaster.setFromCamera(mouse, camera)
-  // const intersects = raycaster.intersectObjects(
-  //   dynamicBodies.flatMap((a) => a[0]),
-  //   false
-  // )
-  // console.log(intersects.length)
-  // if (intersects.length) {
-  // }
+  if (canClick) {
+    console.log(canClick)
+    console.log(camera)
 
-  // 影响球体运动轨迹参数 params
-  // 初始力 actionParams.impulse = new RAPIER.Vector3(200, 43, -280) // 初始力
-  // params.detalX = -9.8 * 1.4 // 初始速度
-  const actionParams = {
-    impulse: new RAPIER.Vector3(200, 43, -280), // 初始力
-    detalX: -9.8 * 2.0 // x 方向初引力
-  }
-  const ballBody = dynamicBodies[0][1]
+    canClick = false
+    // mouse.set(
+    //   (e.clientX / renderer.domElement.clientWidth) * 2 - 1,
+    //   -(e.clientY / renderer.domElement.clientHeight) * 2 + 1
+    // )
+    // raycaster.setFromCamera(mouse, camera)
+    // const intersects = raycaster.intersectObjects(
+    //   dynamicBodies.flatMap((a) => a[0]),
+    //   false
+    // )
+    // console.log(intersects.length)
+    // if (intersects.length) {
+    // }
 
-  const torque = new RAPIER.Vector3(552.0, 510, -100)
-  ballBody.applyTorqueImpulse(torque, true)
+    // 影响球体运动轨迹参数 params
+    // 初始力 actionParams.impulse = new RAPIER.Vector3(200, 43, -280) // 初始力
+    // params.detalX = -9.8 * 1.4 // x 方向初引力
+    // params.torque = new RAPIER.Vector3(552.0, 510, -100) // 初始扭矩(自转)
 
-  // 瞬间给力
-  ballBody.applyImpulse(actionParams.impulse, true)
-  let detalX = actionParams.detalX
-  const interval = setInterval(() => {
-    // 持续施加x方向的力
-    detalX += 0.05
-    ballBody.addForce(new RAPIER.Vector3(detalX, 0, 0), true)
-    if (detalX >= 0) {
+    // const actionParams = {
+    //   impulse: new RAPIER.Vector3(200 * 1.8, 83, -280 * 1.5), // 初始力
+    //   detalX: -9.8 * 5.7, // x 方向初引力
+    //   torque: new RAPIER.Vector3(552.0 * 1, 510 * 1, -500 * -1), // 初始扭矩(自转)
+    //   detalXSpeed: 0.4 // x 方向引力减弱强度
+    // }
+
+    const actionParams = {
+      impulse: new RAPIER.Vector3(200 * 0.9 * 2.3, 73, -280 * 1.8), // 初始力
+      detalX: -9.8 * 1.5 * 2.7, // x 方向初引力
+      torque: new RAPIER.Vector3(552.0 * 0.3, 510 * 0, -500 * 0), // 初始扭矩(自转)
+      detalXSpeed: 0.1 // x 方向引力减弱强度
+    }
+
+    const ballBody = dynamicBodies[0][1]
+    ballBody.applyTorqueImpulse(actionParams.torque, true)
+
+    // 瞬间给力
+    ballBody.applyImpulse(actionParams.impulse, true)
+    let detalX = actionParams.detalX
+    const interval = setInterval(() => {
+      // 持续施加x方向的力
+      detalX += actionParams.detalXSpeed
+      ballBody.addForce(new RAPIER.Vector3(detalX, 0, 0), true)
+      if (detalX >= 0) {
+        ballBody.resetForces(true)
+        ballBody.addForce(new RAPIER.Vector3(0, 0, 0), true)
+        clearInterval(interval)
+      }
+    }, 10)
+
+    addBallCollisionListener('ballWallCollision', (e) => {
       ballBody.resetForces(true)
       ballBody.addForce(new RAPIER.Vector3(0, 0, 0), true)
       clearInterval(interval)
-    }
-  }, 10)
+    })
 
-  addBallCollisionListener('ballWallCollision', (e) => {
-    console.log(e.target == floorCollider)
-
-    ballBody.resetForces(true)
-    ballBody.addForce(new RAPIER.Vector3(0, 0, 0), true)
-    clearInterval(interval)
-  })
-
-  const initTimer = setTimeout(() => {
-    clearInterval(interval)
-    ballBody.resetForces(true)
-    ballBody.applyImpulse(new RAPIER.Vector3(0, 0, 0), true)
-    sphereBody.setTranslation({ x: 0, y: 2, z: 20 }, true)
-    ballBody.setAngvel({ x: 0.0, y: 0.0, z: 0.0 }, true) // 角动量
-    ballBody.setLinvel({ x: 0.0, y: 0.0, z: 0.0 }, true)
-    clearTimeout(initTimer)
-    canClick = true
-  }, 4000)
+    const initTimer = setTimeout(() => {
+      clearInterval(interval)
+      ballBody.resetForces(true)
+      ballBody.applyImpulse(new RAPIER.Vector3(0, 0, 0), true)
+      sphereBody.setTranslation({ x: 0, y: 2, z: 60 }, true)
+      ballBody.setAngvel({ x: 0.0, y: 0.0, z: 0.0 }, true) // 角动量
+      ballBody.setLinvel({ x: 0.0, y: 0.0, z: 0.0 }, true)
+      clearTimeout(initTimer)
+      canClick = true
+    }, 4000)
+  }
 })
 
 const stats = new Stats()
@@ -308,7 +367,7 @@ function animate() {
 
   renderer.render(scene, camera)
 
-  stats.update()
+  // stats.update()
 }
 
 // 重置物理世界
