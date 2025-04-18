@@ -349,6 +349,11 @@ braces@^3.0.3:
   dependencies:
     fill-range "^7.1.1"
 
+camera-controls@^2.10.1:
+  version "2.10.1"
+  resolved "https://registry.npmmirror.com/camera-controls/-/camera-controls-2.10.1.tgz#78bc58001a2d5925c29312154ce77d16967dec56"
+  integrity sha512-KnaKdcvkBJ1Irbrzl8XD6WtZltkRjp869Jx8c0ujs9K+9WD+1D7ryBsCiVqJYUqt6i/HR5FxT7RLASieUD+Q5w==
+
 commander@^13.0.0:
   version "13.1.0"
   resolved "https://registry.npmmirror.com/commander/-/commander-13.1.0.tgz#776167db68c78f38dcce1f9b8d7b8b9a488abf46"

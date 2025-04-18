@@ -4,7 +4,7 @@ import { GUI } from 'three/addons/libs/lil-gui.module.min.js'
 import RAPIER from '@dimforge/rapier3d-compat'
 import { lerp, lightHelperControl, RapierDebugRenderer } from './utils'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-
+import CameraControls from 'camera-controls'
 await RAPIER.init() // This line is only needed if using the compat version
 const g = -9.8 * 3
 const initialGravity = { x: 0.0, y: g, z: 0.0 }
@@ -28,6 +28,25 @@ camera.position.set(0, 300, 220)
 camera.scale.set(13.7, 13.7, 13.7)
 camera.rotation.set(-0.7, 0, 0)
 camera.lookAt(-0, -80, -80)
+scene.add(camera)
+
+const gridHelper = new THREE.GridHelper(100, 4)
+// gridHelper.position.set(0, 300, 220)
+// gridHelper.rotation.set(0, 0, Math.PI / 2)
+// camera.add(gridHelper)
+const plane2 = new THREE.Mesh(
+  new THREE.PlaneGeometry(10, 10, 10),
+  new THREE.MeshStandardMaterial({
+    // map: texture,
+    color: 0xffffff,
+    emissive: 0xffffff,
+    // emissiveMap: texture,
+    side: THREE.DoubleSide,
+    transparent: true
+  })
+)
+plane2.position.z -= 10
+camera.add(plane2)
 
 // const gui = new GUI()
 const data = {
@@ -72,9 +91,9 @@ window.addEventListener('resize', () => {
   camera.updateProjectionMatrix()
   renderer.setSize(window.innerWidth, window.innerHeight)
 })
-
-const controls = new OrbitControls(camera, renderer.domElement)
-controls.enabled = false
+CameraControls.install({ THREE: THREE })
+const controls = new CameraControls(camera, renderer.domElement)
+// controls.enabled = false
 // controls.enableDamping = false
 // controls.target.y = 1
 
