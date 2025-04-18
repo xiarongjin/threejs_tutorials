@@ -30,22 +30,26 @@ camera.rotation.set(-0.7, 0, 0)
 camera.lookAt(-0, -80, -80)
 scene.add(camera)
 
-const gridHelper = new THREE.GridHelper(100, 4)
+// const gridHelper = new THREE.GridHelper(1000, 10)
 // gridHelper.position.set(0, 300, 220)
 // gridHelper.rotation.set(0, 0, Math.PI / 2)
 // camera.add(gridHelper)
 const plane2 = new THREE.Mesh(
-  new THREE.PlaneGeometry(10, 10, 10),
+  new THREE.PlaneGeometry(10, 10),
   new THREE.MeshStandardMaterial({
     // map: texture,
-    color: 0xffffff,
-    emissive: 0xffffff,
+    // color: 0xffff00,
+    // emissive: 0xffffff,
     // emissiveMap: texture,
-    side: THREE.DoubleSide,
-    transparent: true
+    // side: THREE.DoubleSide,
+    // opacity: 1
+    transparent: true, // 设置为透明
+    opacity: 0
   })
 )
+// const plane2 = gridHelper
 plane2.position.z -= 10
+// gridHelper.position.z = -10
 camera.add(plane2)
 
 // const gui = new GUI()
@@ -242,9 +246,6 @@ const goalData = {
   position: { x: 0, y: 0, z: -80 } // 球门位置
 }
 
-const raycaster = new THREE.Raycaster()
-const mouse = new THREE.Vector2()
-
 // 监听事件
 // 在创建球体和墙体后添加碰撞检测
 const wallColliderEvent = new CustomEvent('ballWallCollision', {
@@ -287,78 +288,81 @@ const addBallCollisionListener = (
 }
 
 let canClick = true
+// renderer.domElement.addEventListener('click', (e) => {
+//   if (canClick) {
+//     console.log(canClick)
+//     console.log(camera)
+
+//     canClick = false
+
+//     const actionParams = {
+//       impulse: new RAPIER.Vector3(200 * 0.9 * 2.3, 73, -280 * 1.8), // 初始力
+//       detalX: -9.8 * 1.5 * 2.7, // x 方向初引力
+//       torque: new RAPIER.Vector3(552.0 * 0.3, 510 * 0, -500 * 0), // 初始扭矩(自转)
+//       detalXSpeed: 0.1 // x 方向引力减弱强度
+//     }
+
+//     const ballBody = dynamicBodies[0][1]
+//     ballBody.applyTorqueImpulse(actionParams.torque, true)
+
+//     // 瞬间给力
+//     ballBody.applyImpulse(actionParams.impulse, true)
+//     let detalX = actionParams.detalX
+//     const interval = setInterval(() => {
+//       // 持续施加x方向的力
+//       detalX += actionParams.detalXSpeed
+//       ballBody.addForce(new RAPIER.Vector3(detalX, 0, 0), true)
+//       if (detalX >= 0) {
+//         ballBody.resetForces(true)
+//         ballBody.addForce(new RAPIER.Vector3(0, 0, 0), true)
+//         clearInterval(interval)
+//       }
+//     }, 10)
+
+//     addBallCollisionListener('ballWallCollision', (e) => {
+//       ballBody.resetForces(true)
+//       ballBody.addForce(new RAPIER.Vector3(0, 0, 0), true)
+//       clearInterval(interval)
+//     })
+
+//     const initTimer = setTimeout(() => {
+//       clearInterval(interval)
+//       ballBody.resetForces(true)
+//       ballBody.applyImpulse(new RAPIER.Vector3(0, 0, 0), true)
+//       sphereBody.setTranslation({ x: 0, y: 2, z: 60 }, true)
+//       ballBody.setAngvel({ x: 0.0, y: 0.0, z: 0.0 }, true) // 角动量
+//       ballBody.setLinvel({ x: 0.0, y: 0.0, z: 0.0 }, true)
+//       clearTimeout(initTimer)
+//       canClick = true
+//     }, 4000)
+//   }
+// })
+
+const raycaster = new THREE.Raycaster()
+const mouse = new THREE.Vector2()
+
+let ballWayMesh = new THREE.Mesh(
+  new THREE.SphereGeometry(2),
+  // new THREE.IcosahedronGeometry(1, 1),
+  // new THREE.MeshNormalMaterial()
+  new THREE.MeshNormalMaterial({ flatShading: true })
+)
+ballWayMesh.castShadow = true
+scene.add(ballWayMesh)
 renderer.domElement.addEventListener('click', (e) => {
-  if (canClick) {
-    console.log(canClick)
-    console.log(camera)
-
-    canClick = false
-    // mouse.set(
-    //   (e.clientX / renderer.domElement.clientWidth) * 2 - 1,
-    //   -(e.clientY / renderer.domElement.clientHeight) * 2 + 1
-    // )
-    // raycaster.setFromCamera(mouse, camera)
-    // const intersects = raycaster.intersectObjects(
-    //   dynamicBodies.flatMap((a) => a[0]),
-    //   false
-    // )
-    // console.log(intersects.length)
-    // if (intersects.length) {
-    // }
-
-    // 影响球体运动轨迹参数 params
-    // 初始力 actionParams.impulse = new RAPIER.Vector3(200, 43, -280) // 初始力
-    // params.detalX = -9.8 * 1.4 // x 方向初引力
-    // params.torque = new RAPIER.Vector3(552.0, 510, -100) // 初始扭矩(自转)
-
-    // const actionParams = {
-    //   impulse: new RAPIER.Vector3(200 * 1.8, 83, -280 * 1.5), // 初始力
-    //   detalX: -9.8 * 5.7, // x 方向初引力
-    //   torque: new RAPIER.Vector3(552.0 * 1, 510 * 1, -500 * -1), // 初始扭矩(自转)
-    //   detalXSpeed: 0.4 // x 方向引力减弱强度
-    // }
-
-    const actionParams = {
-      impulse: new RAPIER.Vector3(200 * 0.9 * 2.3, 73, -280 * 1.8), // 初始力
-      detalX: -9.8 * 1.5 * 2.7, // x 方向初引力
-      torque: new RAPIER.Vector3(552.0 * 0.3, 510 * 0, -500 * 0), // 初始扭矩(自转)
-      detalXSpeed: 0.1 // x 方向引力减弱强度
-    }
-
-    const ballBody = dynamicBodies[0][1]
-    ballBody.applyTorqueImpulse(actionParams.torque, true)
-
-    // 瞬间给力
-    ballBody.applyImpulse(actionParams.impulse, true)
-    let detalX = actionParams.detalX
-    const interval = setInterval(() => {
-      // 持续施加x方向的力
-      detalX += actionParams.detalXSpeed
-      ballBody.addForce(new RAPIER.Vector3(detalX, 0, 0), true)
-      if (detalX >= 0) {
-        ballBody.resetForces(true)
-        ballBody.addForce(new RAPIER.Vector3(0, 0, 0), true)
-        clearInterval(interval)
-      }
-    }, 10)
-
-    addBallCollisionListener('ballWallCollision', (e) => {
-      ballBody.resetForces(true)
-      ballBody.addForce(new RAPIER.Vector3(0, 0, 0), true)
-      clearInterval(interval)
-    })
-
-    const initTimer = setTimeout(() => {
-      clearInterval(interval)
-      ballBody.resetForces(true)
-      ballBody.applyImpulse(new RAPIER.Vector3(0, 0, 0), true)
-      sphereBody.setTranslation({ x: 0, y: 2, z: 60 }, true)
-      ballBody.setAngvel({ x: 0.0, y: 0.0, z: 0.0 }, true) // 角动量
-      ballBody.setLinvel({ x: 0.0, y: 0.0, z: 0.0 }, true)
-      clearTimeout(initTimer)
-      canClick = true
-    }, 4000)
-  }
+  mouse.set(
+    (e.clientX / renderer.domElement.clientWidth) * 2 - 1,
+    -(e.clientY / renderer.domElement.clientHeight) * 2 + 1
+  )
+  raycaster.setFromCamera(mouse, camera)
+  const intersects = raycaster.intersectObjects([plane2], false)
+  console.log(intersects.length)
+  console.log(intersects[0].point)
+  ballWayMesh.position.set(
+    intersects[0].point.x,
+    intersects[0].point.y,
+    intersects[0].point.z
+  )
 })
 
 const stats = new Stats()
