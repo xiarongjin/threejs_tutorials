@@ -1,4 +1,5 @@
 // import { initSection1 } from './section/renderer'
+import { initFootballGame } from './footballGame'
 import './style.css'
 // import './section/object3d'
 // import { initThree } from './threeDemo'
@@ -12,6 +13,8 @@ import './style.css'
 
 // import './section/environmentMap'
 // import './section/loadAssets'
-import './section/rapierDemo'
+// import './section/rapierDemo'
 // import './section/lights'
 // import './section/drawLine'
+
+initFootballGame()

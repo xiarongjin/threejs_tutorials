@@ -2,7 +2,12 @@ import * as THREE from 'three'
 import Stats from 'three/addons/libs/stats.module.js'
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js'
 import RAPIER from '@dimforge/rapier3d-compat'
-import { lerp, lightHelperControl, RapierDebugRenderer } from './utils'
+import {
+  lerp,
+  lightHelperControl,
+  moveBall,
+  RapierDebugRenderer
+} from './utils'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import CameraControls from 'camera-controls'
 await RAPIER.init() // This line is only needed if using the compat version
@@ -53,33 +58,35 @@ plane2.position.z -= 10
 camera.add(plane2)
 
 // const gui = new GUI()
-const data = {
-  color: 0x00ff00,
-  lightColor: 0xffffff,
-  shadowMapSizeWidth: 512,
-  shadowMapSizeHeight: 512
-}
+const directionalLight = () => {
+  const data = {
+    color: 0x00ff00,
+    lightColor: 0xffffff,
+    shadowMapSizeWidth: 512,
+    shadowMapSizeHeight: 512
+  }
 
-const directionalLight = new THREE.DirectionalLight(
-  data.lightColor,
-  Math.PI / 2
-)
-const directionalLightConfigInit = () => {
-  directionalLight.castShadow = true
-  directionalLight.intensity = 4.7
-  directionalLight.shadow.camera.near = 0
-  directionalLight.shadow.camera.far = 900
-  directionalLight.shadow.camera.top = 124
-  directionalLight.shadow.camera.bottom = -124
-  directionalLight.shadow.camera.right = 124
-  directionalLight.shadow.camera.left = -124
-  directionalLight.shadow.mapSize.width = data.shadowMapSizeWidth
-  directionalLight.shadow.mapSize.height = data.shadowMapSizeHeight
-  directionalLight.position.set(0, 50, 0)
+  const directionalLight = new THREE.DirectionalLight(
+    data.lightColor,
+    Math.PI / 2
+  )
+  const directionalLightConfigInit = () => {
+    directionalLight.castShadow = true
+    directionalLight.intensity = 4.7
+    directionalLight.shadow.camera.near = 0
+    directionalLight.shadow.camera.far = 900
+    directionalLight.shadow.camera.top = 124
+    directionalLight.shadow.camera.bottom = -124
+    directionalLight.shadow.camera.right = 124
+    directionalLight.shadow.camera.left = -124
+    directionalLight.shadow.mapSize.width = data.shadowMapSizeWidth
+    directionalLight.shadow.mapSize.height = data.shadowMapSizeHeight
+    directionalLight.position.set(0, 50, 0)
+  }
+  directionalLightConfigInit()
+  return directionalLight
 }
-directionalLightConfigInit()
-
-scene.add(directionalLight)
+scene.add(directionalLight())
 
 const renderer = new THREE.WebGLRenderer({ antialias: true })
 renderer.setSize(window.innerWidth, window.innerHeight)
@@ -124,7 +131,16 @@ const sphereShape = RAPIER.ColliderDesc.ball(2)
   .setRestitution(0.34)
   .setFriction(1)
 const ballCollider = world.createCollider(sphereShape, sphereBody)
+
 dynamicBodies.push([sphereMesh, sphereBody])
+
+const initBallBody = () => {
+  sphereBody.resetForces(true)
+  sphereBody.applyImpulse(new RAPIER.Vector3(0, 0, 0), true)
+  sphereBody.setTranslation({ x: 0, y: 2, z: 60 }, true)
+  sphereBody.setAngvel({ x: 0.0, y: 0.0, z: 0.0 }, true) // 角动量
+  sphereBody.setLinvel({ x: 0.0, y: 0.0, z: 0.0 }, true)
+}
 
 // 加载纹理
 const textureLoader = new THREE.TextureLoader()
@@ -234,10 +250,10 @@ const wallColliderDesc = RAPIER.ColliderDesc.cuboid(
   wallData.height / 2,
   wallData.depth / 2
 )
-  .setFriction(wallData.friction)
-  .setRestitution(wallData.restitution)
-const wallCollider = world.createCollider(wallColliderDesc, wallRigidBody)
 
+const wallCollider = world.createCollider(wallColliderDesc, wallRigidBody)
+wallCollider.setFriction(wallData.friction)
+wallCollider.setRestitution(wallData.restitution)
 /// 球门参数
 const goalData = {
   width: 100, // 球门宽度
@@ -265,26 +281,6 @@ function checkBallWallCollision() {
   world.contactPair(floorCollider, ballCollider, () => {
     window.dispatchEvent(floorColliderEvent)
   })
-}
-
-const addBallCollisionListener = (
-  eventName: 'ballWallCollision' | 'ballFloorCollision',
-  callBack: (e: { target: RAPIER.Collider }) => void,
-  isOnce: boolean = true
-) => {
-  const ballCollisionLinstener = (
-    e: CustomEvent<{ target: RAPIER.Collider }>
-  ) => {
-    const event = e
-    callBack(event.detail)
-    if (isOnce) {
-      window.removeEventListener(
-        eventName,
-        ballCollisionLinstener as EventListener
-      )
-    }
-  }
-  window.addEventListener(eventName, ballCollisionLinstener as EventListener)
 }
 
 let canClick = true
@@ -344,49 +340,49 @@ const mouse = new THREE.Vector2()
 
 let isStart = false
 const lineWayPositions: THREE.Vector3[] = []
+const lineWayPositionsResolution: THREE.Vector2[] = []
+
 const cylinderMaterial = new THREE.MeshBasicMaterial({
   color: 0xffffff,
   transparent: true,
   opacity: 0.5
-}) // 圆柱体的颜色
-const cylinders: THREE.Mesh[] = [] // 存储所有圆柱体
+}) // 轨迹的材质
+const cylinders: THREE.Mesh[] = [] // 存储所有的轨迹圆
 
 const createCylinder = (start: THREE.Vector3) => {
-  // const direction = new THREE.Vector3().subVectors(end, start)
-  // const length = direction.length()
-  const cylinderGeometry = new THREE.SphereGeometry(1.5) // 半径为1
+  const cylinderGeometry = new THREE.SphereGeometry(2.5) // 半径为1
   const cylinder = new THREE.Mesh(cylinderGeometry, cylinderMaterial)
 
-  // 设置圆柱体的位置和旋转
+  // 设置轨迹点的位置和旋转
   cylinder.position.copy(start)
-  // cylinder.lookAt(end)
 
   return cylinder
 }
 
 const updateLine = () => {
-  // 清除之前的圆柱体
+  // 清除之前的轨迹体
   cylinders.forEach((cylinder) => scene.remove(cylinder))
   cylinders.length = 0 // 清空数组
-
+  const bigLen = 200 // 最多 200 个轨迹点
   if (lineWayPositions.length > 1) {
-    if (lineWayPositions.length > 200) {
+    if (lineWayPositions.length > bigLen) {
       const newPositions = lineWayPositions.slice(lineWayPositions.length - 200)
       for (let i = 0; i < newPositions.length - 1; i++) {
         const cylinder = createCylinder(newPositions[i])
         scene.add(cylinder)
-        cylinders.push(cylinder) // 存储圆柱体
+        cylinders.push(cylinder) // 存储轨迹体
       }
     } else {
       for (let i = 0; i < lineWayPositions.length - 1; i++) {
         const cylinder = createCylinder(lineWayPositions[i])
         scene.add(cylinder)
-        cylinders.push(cylinder) // 存储圆柱体
+        cylinders.push(cylinder) // 存储轨迹体
       }
     }
   }
 }
 
+// 触摸事件
 const moveHandler = (e: TouchEvent) => {
   if (!isStart) return
   mouse.set(
@@ -394,30 +390,75 @@ const moveHandler = (e: TouchEvent) => {
     -(e.touches[0].clientY / renderer.domElement.clientHeight) * 2 + 1
   )
   raycaster.setFromCamera(mouse, camera)
-  const intersects = raycaster.intersectObjects([plane2], false)
+  // // 在 plane2 平面上绘制触摸点
+  // const intersects = raycaster.intersectObjects([plane2], false)
 
-  if (intersects.length > 0) {
-    lineWayPositions.push(intersects[0].point)
+  // if (intersects.length > 0) {
+  //   // lineWayPositions.push(intersects[0].point)
+  //   console.log('镜子上的点', intersects[0].point)
+  //   // updateLine()
+  // }
+
+  // 记录在地板上的点
+  const intersectsFloor = raycaster.intersectObjects([floorMesh], false)
+  if (intersectsFloor.length > 0) {
+    const currentPoint = intersectsFloor[0].point
+
+    // console.log('地面上的点', intersectsFloor[0].point)
+
+    lineWayPositions.push(currentPoint)
+    lineWayPositionsResolution.push(
+      new THREE.Vector2(currentPoint.x, currentPoint.z)
+    )
     updateLine()
   }
 }
 
-const clearDrawLine = () => {
+let canMoveBall = true
+
+const clearDrawLine = (interval?: number) => {
   isStart = false
   lineWayPositions.length = 0
+  lineWayPositionsResolution.length = 0
   updateLine()
   renderer.domElement.removeEventListener('touchmove', moveHandler)
-}
-renderer.domElement.addEventListener('touchstart', () => {
-  isStart = true
-  renderer.domElement.addEventListener('touchmove', moveHandler)
   const timer = setTimeout(() => {
     clearTimeout(timer)
-    clearDrawLine()
-  }, 1000)
+    clearInterval(interval)
+    if (interval) {
+      canMoveBall = true
+      initBallBody()
+    }
+  }, 2000)
+}
+renderer.domElement.addEventListener('touchstart', () => {
+  if (!canMoveBall) return
+  isStart = true
+  renderer.domElement.addEventListener('touchmove', moveHandler)
+  // 1000ms 后清除绘制
+  // const timer = setTimeout(() => {
+  //   clearTimeout(timer)
+  //   clearDrawLine()
+  // }, 1000)
 })
+const touchEndHandler = () => {
+  if (lineWayPositionsResolution.length > 2) {
+    // 在球体上施加力
+    const ballBody = dynamicBodies[0][1] // 获取球体的刚体
+    // ballBody.applyImpulse(, true) // 施加力
+    const interval = moveBall(ballBody, lineWayPositionsResolution)
+
+    clearDrawLine(interval)
+  }
+  isStart = true
+}
 renderer.domElement.addEventListener('touchend', () => {
-  clearDrawLine()
+  // clearDrawLine()
+  console.log('touchend', canMoveBall)
+  if (canMoveBall) {
+    canMoveBall = false
+    touchEndHandler()
+  }
 })
 
 const stats = new Stats()

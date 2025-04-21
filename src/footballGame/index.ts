@@ -1,0 +1,116 @@
+import RAPIER, { init } from '@dimforge/rapier3d-compat'
+import * as THREE from 'three'
+import { lightHelperControl, RapierDebugRenderer } from '../section/utils'
+import { initLight } from './light'
+import { initCamera } from './camera'
+import { initBall } from './ball'
+import Stats from 'three/addons/libs/stats.module.js'
+import CameraControls from 'camera-controls'
+import { ballAction, meshAndBodyHandler } from './utils'
+import { initFloor } from './floor'
+import GUI from 'lil-gui'
+import { initWall } from './wall'
+import { initTouchHandler } from './touchHandler'
+export const initFootballGame = async () => {
+  await RAPIER.init()
+  const g = -9.8 * 3
+  const initialGravity = { x: 0.0, y: g, z: 0.0 }
+  let world = new RAPIER.World(initialGravity)
+  const dynamicBodies: [THREE.Object3D, RAPIER.RigidBody][] = []
+  const scene = new THREE.Scene()
+  const rapierDebugRenderer = new RapierDebugRenderer(scene, world)
+  // rapierDebugRenderer.enabled = false
+
+  const camera = initCamera()
+  scene.add(camera)
+  // 灯光
+  const light = initLight()
+  scene.add(light)
+  const gui = new GUI()
+  // lightHelperControl(
+  //   light,
+  //   {
+  //     color: 0x00ff00,
+  //     lightColor: 0xffffff,
+  //     shadowMapSizeWidth: 512,
+  //     shadowMapSizeHeight: 512
+  //   },
+  //   scene,
+  //   gui
+  // )
+  // 渲染到 dom 上
+  const renderer = new THREE.WebGLRenderer({ antialias: true })
+  renderer.setSize(window.innerWidth, window.innerHeight)
+
+  renderer.shadowMap.enabled = true
+  renderer.shadowMap.type = THREE.VSMShadowMap
+
+  document.body.appendChild(renderer.domElement)
+  renderer.render(scene, camera)
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight
+    camera.updateProjectionMatrix()
+    renderer.setSize(window.innerWidth, window.innerHeight)
+  })
+
+  // 球
+  const ball = initBall(world)
+  scene.add(ball.mesh)
+
+  dynamicBodies.push([ball.mesh, ball.body])
+
+  // 加载纹理
+  const textureLoader = new THREE.TextureLoader()
+  const texture = await textureLoader.loadAsync('img/grid.png')
+
+  // 地板
+  const floor = initFloor(texture, world)
+  scene.add(floor.mesh)
+
+  // 挡板
+  const wall = initWall(texture, world)
+  scene.add(wall.mesh)
+
+  // 交互
+  const touchMoveHandler = (e: TouchEvent) => {}
+  const touchEndHandler = () => {
+    ballAction(ball.body, [])
+  }
+  const initAction = () => {
+    ball.destroy()
+  }
+  initTouchHandler(
+    renderer.domElement,
+    touchMoveHandler,
+    touchEndHandler,
+    initAction,
+    3000
+  )
+
+  // 辅助界面
+  const stats = new Stats()
+  document.body.appendChild(stats.dom)
+  CameraControls.install({ THREE: THREE })
+  const controls = new CameraControls(camera, renderer.domElement)
+  controls.enabled = false
+
+  const clock = new THREE.Clock()
+  let delta
+
+  function animate() {
+    requestAnimationFrame(animate)
+
+    delta = clock.getDelta()
+
+    world.timestep = Math.min(delta, 0.1)
+    world.step()
+
+    rapierDebugRenderer.update()
+    controls.update(delta)
+
+    renderer.render(scene, camera)
+    meshAndBodyHandler(dynamicBodies)
+    stats.update()
+  }
+  animate()
+}
