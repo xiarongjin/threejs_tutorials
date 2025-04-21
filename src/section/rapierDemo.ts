@@ -97,7 +97,7 @@ window.addEventListener('resize', () => {
 })
 CameraControls.install({ THREE: THREE })
 const controls = new CameraControls(camera, renderer.domElement)
-// controls.enabled = false
+// controls.enabled = true
 // controls.enableDamping = false
 // controls.target.y = 1
 
@@ -338,31 +338,86 @@ let canClick = true
 //   }
 // })
 
+// 绘制手指触摸轨迹
 const raycaster = new THREE.Raycaster()
 const mouse = new THREE.Vector2()
 
-let ballWayMesh = new THREE.Mesh(
-  new THREE.SphereGeometry(2),
-  // new THREE.IcosahedronGeometry(1, 1),
-  // new THREE.MeshNormalMaterial()
-  new THREE.MeshNormalMaterial({ flatShading: true })
-)
-ballWayMesh.castShadow = true
-scene.add(ballWayMesh)
-renderer.domElement.addEventListener('click', (e) => {
+let isStart = false
+const lineWayPositions: THREE.Vector3[] = []
+const cylinderMaterial = new THREE.MeshBasicMaterial({
+  color: 0xffffff,
+  transparent: true,
+  opacity: 0.5
+}) // 圆柱体的颜色
+const cylinders: THREE.Mesh[] = [] // 存储所有圆柱体
+
+const createCylinder = (start: THREE.Vector3) => {
+  // const direction = new THREE.Vector3().subVectors(end, start)
+  // const length = direction.length()
+  const cylinderGeometry = new THREE.SphereGeometry(1.5) // 半径为1
+  const cylinder = new THREE.Mesh(cylinderGeometry, cylinderMaterial)
+
+  // 设置圆柱体的位置和旋转
+  cylinder.position.copy(start)
+  // cylinder.lookAt(end)
+
+  return cylinder
+}
+
+const updateLine = () => {
+  // 清除之前的圆柱体
+  cylinders.forEach((cylinder) => scene.remove(cylinder))
+  cylinders.length = 0 // 清空数组
+
+  if (lineWayPositions.length > 1) {
+    if (lineWayPositions.length > 200) {
+      const newPositions = lineWayPositions.slice(lineWayPositions.length - 200)
+      for (let i = 0; i < newPositions.length - 1; i++) {
+        const cylinder = createCylinder(newPositions[i])
+        scene.add(cylinder)
+        cylinders.push(cylinder) // 存储圆柱体
+      }
+    } else {
+      for (let i = 0; i < lineWayPositions.length - 1; i++) {
+        const cylinder = createCylinder(lineWayPositions[i])
+        scene.add(cylinder)
+        cylinders.push(cylinder) // 存储圆柱体
+      }
+    }
+  }
+}
+
+const moveHandler = (e: TouchEvent) => {
+  if (!isStart) return
   mouse.set(
-    (e.clientX / renderer.domElement.clientWidth) * 2 - 1,
-    -(e.clientY / renderer.domElement.clientHeight) * 2 + 1
+    (e.touches[0].clientX / renderer.domElement.clientWidth) * 2 - 1,
+    -(e.touches[0].clientY / renderer.domElement.clientHeight) * 2 + 1
   )
   raycaster.setFromCamera(mouse, camera)
   const intersects = raycaster.intersectObjects([plane2], false)
-  console.log(intersects.length)
-  console.log(intersects[0].point)
-  ballWayMesh.position.set(
-    intersects[0].point.x,
-    intersects[0].point.y,
-    intersects[0].point.z
-  )
+
+  if (intersects.length > 0) {
+    lineWayPositions.push(intersects[0].point)
+    updateLine()
+  }
+}
+
+const clearDrawLine = () => {
+  isStart = false
+  lineWayPositions.length = 0
+  updateLine()
+  renderer.domElement.removeEventListener('touchmove', moveHandler)
+}
+renderer.domElement.addEventListener('touchstart', () => {
+  isStart = true
+  renderer.domElement.addEventListener('touchmove', moveHandler)
+  const timer = setTimeout(() => {
+    clearTimeout(timer)
+    clearDrawLine()
+  }, 1000)
+})
+renderer.domElement.addEventListener('touchend', () => {
+  clearDrawLine()
 })
 
 const stats = new Stats()
@@ -387,6 +442,7 @@ function animate() {
   }
   checkBallWallCollision()
   rapierDebugRenderer.update()
+  // controls.update(delta)
 
   renderer.render(scene, camera)
 
