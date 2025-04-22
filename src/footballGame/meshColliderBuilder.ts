@@ -27,7 +27,6 @@ export class MeshColliderBuilder {
       { x: worldPosition.x, y: worldPosition.y, z: worldPosition.z },
       true
     )
-    console.log(worldPosition)
     body.setRotation(
       {
         x: worldQuaternion.x,

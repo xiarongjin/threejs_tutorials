@@ -1,6 +1,6 @@
 import RAPIER from '@dimforge/rapier3d-compat'
 import * as THREE from 'three'
-export const meshAndBodyHandler = (
+export const meshAndBodyAutoPosition = (
   dynamicBodies: [THREE.Object3D<THREE.Object3DEventMap>, RAPIER.RigidBody][]
 ) => {
   for (let i = 0, n = dynamicBodies.length; i < n; i++) {
@@ -100,18 +100,25 @@ export const moveBall = (
   return interval
 }
 
-export const ballAction = (
-  body: RAPIER.RigidBody,
-  positions: THREE.Vector2[]
-) => {
-  const actionParams = {
-    impulse: new RAPIER.Vector3(200 * 0.9 * 1.3, 73, -280 * 2.8), // 初始力
-    detalX: -9.8 * 1.5 * 2.7, // x 方向初引力
-    // torque: new RAPIER.Vector3(552.0 * 0.3, 510 * 0, -500 * 0), // 初始扭矩(自转)
-    detalXSpeed: 0.1 // x 方向引力减弱强度
+export const getMouseMapPosition = (
+  e: TouchEvent,
+  camera: THREE.Camera,
+  mesh: THREE.Object3D<THREE.Object3DEventMap>[],
+  dom: HTMLCanvasElement
+): THREE.Vector3 => {
+  // 记录触摸的点
+  let lineWayPosition: THREE.Vector3 = new THREE.Vector3()
+  const raycaster = new THREE.Raycaster()
+  const mouse = new THREE.Vector2()
+  mouse.set(
+    (e.touches[0].clientX / dom.clientWidth) * 2 - 1,
+    -(e.touches[0].clientY / dom.clientHeight) * 2 + 1
+  )
+  raycaster.setFromCamera(mouse, camera)
+  const intersectsFloor = raycaster.intersectObjects(mesh, false)
+  if (intersectsFloor.length > 0) {
+    const currentPoint = intersectsFloor[0].point
+    lineWayPosition.copy(currentPoint)
   }
-  // body.applyTorqueImpulse(actionParams.torque, true)
-
-  // 瞬间给力
-  body.applyImpulse(actionParams.impulse, true)
+  return lineWayPosition
 }

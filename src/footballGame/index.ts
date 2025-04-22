@@ -6,11 +6,13 @@ import { initCamera } from './camera'
 import { initBall } from './ball'
 import Stats from 'three/addons/libs/stats.module.js'
 import CameraControls from 'camera-controls'
-import { ballAction, meshAndBodyHandler } from './utils'
+import { getMouseMapPosition, meshAndBodyAutoPosition } from './utils'
+import { ballAction } from './ballAction'
 import { initFloor } from './floor'
 import GUI from 'lil-gui'
 import { initWall } from './wall'
 import { initTouchHandler } from './touchHandler'
+import { initTouchLine } from './touchLine'
 export const initFootballGame = async () => {
   await RAPIER.init()
   const g = -9.8 * 3
@@ -72,9 +74,24 @@ export const initFootballGame = async () => {
   scene.add(wall.mesh)
 
   // 交互
-  const touchMoveHandler = (e: TouchEvent) => {}
+  const touchLine = initTouchLine(scene)
+  const touchMoveHandler = (e: TouchEvent) => {
+    const point = getMouseMapPosition(
+      e,
+      camera,
+      [floor.mesh],
+      renderer.domElement
+    )
+    // 实际只需要二维点（优化空间
+    touchLine.updateLine(point)
+  }
   const touchEndHandler = () => {
-    ballAction(ball.body, [])
+    // 深拷贝三维数组只取二维
+    const positionArrCopy = touchLine.getLineWayPositions().map((position) => {
+      return new THREE.Vector2(position.x, position.z)
+    })
+    ballAction(ball.body, positionArrCopy)
+    touchLine.clearLine()
   }
   const initAction = () => {
     ball.destroy()
@@ -84,7 +101,7 @@ export const initFootballGame = async () => {
     touchMoveHandler,
     touchEndHandler,
     initAction,
-    3000
+    1000
   )
 
   // 辅助界面
@@ -109,7 +126,7 @@ export const initFootballGame = async () => {
     controls.update(delta)
 
     renderer.render(scene, camera)
-    meshAndBodyHandler(dynamicBodies)
+    meshAndBodyAutoPosition(dynamicBodies)
     stats.update()
   }
   animate()
