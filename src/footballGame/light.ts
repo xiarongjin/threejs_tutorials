@@ -13,7 +13,7 @@ export const initLight = () => {
   )
   const directionalLightConfigInit = () => {
     directionalLight.castShadow = true
-    directionalLight.intensity = 8
+    directionalLight.intensity = 5
     directionalLight.shadow.camera.near = 0
     directionalLight.shadow.camera.far = 1520
     directionalLight.shadow.camera.top = 150

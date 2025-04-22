@@ -1,4 +1,4 @@
-import RAPIER, { init } from '@dimforge/rapier3d-compat'
+import RAPIER from '@dimforge/rapier3d-compat'
 import * as THREE from 'three'
 import { lightHelperControl, RapierDebugRenderer } from '../section/utils'
 import { initLight } from './light'
@@ -85,23 +85,37 @@ export const initFootballGame = async () => {
     // 实际只需要二维点（优化空间
     touchLine.updateLine(point)
   }
+  let canDestroy = false
+  let ballInterNum: number | null
   const touchEndHandler = () => {
     // 深拷贝三维数组只取二维
     const positionArrCopy = touchLine.getLineWayPositions().map((position) => {
       return new THREE.Vector2(position.x, position.z)
     })
-    ballAction(ball.body, positionArrCopy)
-    touchLine.clearLine()
+    if (positionArrCopy.length > 2 && !canDestroy) {
+      ballInterNum = ballAction(ball.body, positionArrCopy)
+      canDestroy = true
+      touchLine.clearLine()
+    }
   }
   const initAction = () => {
-    ball.destroy()
+    if (canDestroy) {
+      ball.destroy()
+      clearInterval(ballInterNum)
+      ballInterNum == null
+      canDestroy = false
+    }
+  }
+  const touchStartHandler = () => {
+    touchLine.clearLine()
   }
   initTouchHandler(
     renderer.domElement,
     touchMoveHandler,
     touchEndHandler,
+    touchStartHandler,
     initAction,
-    1000
+    2000
   )
 
   // 辅助界面
@@ -114,6 +128,27 @@ export const initFootballGame = async () => {
   const clock = new THREE.Clock()
   let delta
 
+  // 监听事件
+  // 在创建球体和墙体后添加碰撞检测
+  const wallColliderEvent = new CustomEvent('ballWallCollision', {
+    detail: { target: wall.collider }
+  })
+  const floorColliderEvent = new CustomEvent('ballFloorCollision', {
+    detail: { target: floor.collider }
+  })
+
+  function checkBallWallCollision() {
+    // 触发墙面碰撞事件
+    world.contactPair(wall.collider, ball.collider, () => {
+      window.dispatchEvent(wallColliderEvent)
+    })
+
+    // 触发地板碰撞事件
+    world.contactPair(floor.collider, ball.collider, () => {
+      window.dispatchEvent(floorColliderEvent)
+    })
+  }
+
   function animate() {
     requestAnimationFrame(animate)
 
@@ -124,6 +159,7 @@ export const initFootballGame = async () => {
 
     rapierDebugRenderer.update()
     controls.update(delta)
+    checkBallWallCollision()
 
     renderer.render(scene, camera)
     meshAndBodyAutoPosition(dynamicBodies)

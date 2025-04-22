@@ -2,6 +2,7 @@ export const initTouchHandler = (
   dom: HTMLCanvasElement,
   touchMove: (e: TouchEvent) => void,
   touchEnd: () => void,
+  touchStart: () => void,
   initAction: () => void,
   initMs: number = 5000
 ) => {
@@ -14,22 +15,27 @@ export const initTouchHandler = (
   }
   const touchStartHandler = () => {
     if (!canAction) return
+    touchStart()
     dom.addEventListener('touchmove', touchMoveHandler, { passive: true })
   }
   dom.addEventListener('touchstart', touchStartHandler, { passive: true })
 
   // dom.addEventListener('touchmove', touchMoveHandler, { passive: true })
   const touchEndHandler = () => {
-    if (!canAction) return
     if (canAction) {
       touchEnd()
       dom.removeEventListener('touchmove', touchMoveHandler)
+      dom.removeEventListener('touchstart', touchStartHandler)
       canAction = false
       const timer = setTimeout(() => {
-        canAction = true
-        clearTimeout(timer)
         initAction()
       }, initMs)
+      const timer2 = setTimeout(() => {
+        canAction = true
+        clearTimeout(timer)
+        clearTimeout(timer2)
+        dom.addEventListener('touchstart', touchStartHandler, { passive: true })
+      }, initMs + 10)
     }
   }
   dom.addEventListener('touchend', touchEndHandler, { passive: true })

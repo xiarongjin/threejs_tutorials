@@ -13,8 +13,8 @@ export const initFloor = (texture: THREE.Texture, world: RAPIER.World) => {
     rotationX: 0,
     rotationY: 0,
     rotationZ: 0,
-    friction: 100, // 摩擦系数
-    restitution: 0.3 // 弹性系数
+    friction: 0.9, // 摩擦系数
+    restitution: 0.1 // 弹性系数
   }
   const floorGeometry = new THREE.PlaneGeometry(
     floorData.width,
