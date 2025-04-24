@@ -3,12 +3,12 @@ import RAPIER from '@dimforge/rapier3d-compat'
 import { MeshColliderBuilder } from './meshColliderBuilder'
 
 export const initBall = (world: RAPIER.World) => {
-  const ballRadius = 2
+  const ballRadius = 4
   const ballData = {
     radius: ballRadius,
     x: 0,
     y: ballRadius,
-    z: 80,
+    z: 180,
     mass: 5,
     friction: 0.5, // 摩擦
     restitution: 0.04, // 弹性

@@ -4,9 +4,9 @@ import { MeshColliderBuilder } from './meshColliderBuilder'
 
 export const initFloor = (texture: THREE.Texture, world: RAPIER.World) => {
   const floorData = {
-    width: 300,
+    width: 800,
     height: 1,
-    depth: 300,
+    depth: 800,
     x: 0,
     y: 0,
     z: 0,

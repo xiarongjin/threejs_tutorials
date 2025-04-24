@@ -16,13 +16,14 @@ export const initLight = () => {
     directionalLight.intensity = 7
     directionalLight.shadow.camera.near = 0
     directionalLight.shadow.camera.far = 1520
-    directionalLight.shadow.camera.top = 150
+    directionalLight.shadow.camera.top = 350
     directionalLight.shadow.camera.bottom = -247
     directionalLight.shadow.camera.right = 180
     directionalLight.shadow.camera.left = -120
     directionalLight.shadow.mapSize.width = data.shadowMapSizeWidth
     directionalLight.shadow.mapSize.height = data.shadowMapSizeHeight
-    directionalLight.position.set(169, 214, 110)
+    // directionalLight.position.set(169, 214, 110)
+    directionalLight.position.set(91, 190, 140)
   }
   directionalLightConfigInit()
   return directionalLight

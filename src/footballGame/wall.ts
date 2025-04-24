@@ -4,12 +4,12 @@ import { MeshColliderBuilder } from './meshColliderBuilder'
 
 export const initWall = (texture: THREE.Texture, world: RAPIER.World) => {
   const wallData = {
-    width: 300,
-    height: 300,
+    width: 600,
+    height: 600,
     depth: 0.5,
     x: 0,
-    y: -100,
-    z: -125,
+    y: -200,
+    z: -170,
     rotationX: 0,
     rotationY: 0,
     rotationZ: 0,

@@ -42,6 +42,7 @@ export const initFootballGame = async () => {
   //   gui
   // )
   // 渲染到 dom 上
+
   const renderer = new THREE.WebGLRenderer({ antialias: true })
   renderer.setSize(window.innerWidth, window.innerHeight)
 
@@ -80,11 +81,11 @@ export const initFootballGame = async () => {
   const leftPost = initPost(
     {
       width: 5,
-      height: 80,
+      height: 120,
       depth: 5,
-      x: -40,
-      y: 0,
-      z: -60,
+      x: -80,
+      y: 20,
+      z: -80,
       rotationX: 0,
       rotationY: 0,
       rotationZ: 0,
@@ -98,11 +99,11 @@ export const initFootballGame = async () => {
   const rightPost = initPost(
     {
       width: 5,
-      height: 80,
+      height: 120,
       depth: 5,
-      x: 40,
-      y: 0,
-      z: -60,
+      x: 80,
+      y: 20,
+      z: -80,
       rotationX: 0,
       rotationY: 0,
       rotationZ: 0,
@@ -115,12 +116,12 @@ export const initFootballGame = async () => {
   // 横梁
   const goalBeam = initPost(
     {
-      width: 80,
+      width: 160,
       height: 5,
       depth: 5,
       x: 0,
-      y: 40,
-      z: -60,
+      y: 80,
+      z: -80,
       rotationX: 0,
       rotationY: 0,
       rotationZ: 0,
@@ -182,6 +183,23 @@ export const initFootballGame = async () => {
   CameraControls.install({ THREE: THREE })
   const controls = new CameraControls(camera, renderer.domElement)
   controls.enabled = false
+  const CameraControlsFolder = gui.addFolder('cameraControls')
+  CameraControlsFolder.add(controls, 'enabled').onChange(() => {
+    if (controls.enabled) {
+      controls.enabled = true
+    } else {
+      controls.enabled = false
+    }
+  })
+  rapierDebugRenderer.enabled = false
+  const rapierDebugRendererFolder = gui.addFolder('rapierDebugRenderer')
+  rapierDebugRendererFolder.add(rapierDebugRenderer, 'enabled').onChange(() => {
+    if (rapierDebugRenderer.enabled) {
+      rapierDebugRenderer.enabled = true
+    } else {
+      rapierDebugRenderer.enabled = false
+    }
+  })
 
   const clock = new THREE.Clock()
   let delta

@@ -7,7 +7,12 @@ export const ballAction = (
   body: RAPIER.RigidBody,
   positions: THREE.Vector2[]
 ) => {
-  ballTestAction(body, positions)
+  try {
+    ballTestAction(body, positions)
+  } catch (error) {
+    console.log(error)
+  }
+
   const actionParams = lineWayToActionParams(positions)
   // body.applyTorqueImpulse(actionParams.torque, true)
 
