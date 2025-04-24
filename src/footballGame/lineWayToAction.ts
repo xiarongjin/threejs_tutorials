@@ -73,72 +73,76 @@ export const lineWayToActionParams = (lineWayPositions: THREE.Vector2[]) => {
 
   const phase1 = getSlope(keyPoints[0], keyPoints[1])
   const phase2 = getSlope(keyPoints[1], keyPoints[2])
+  return {
+    phase1,
+    phase2
+  }
 
   // 球门方向为 y 轴负方向
   // 开口方向
 
-  const POWER = -1000 * 1 * 0.5
+  // const POWER = -1000 * 1 * 0.5
 
-  if (phase1.dy < 0 && phase2.dy < 0) {
-    // 朝 球门 方向
-    if (phase1.dx > 0 && phase2.dx > 0) {
-      // 朝 X 轴正方向
-      // console.log('朝球门方向+X轴正方向')
-      // console.log(phase1.slope, phase2.slope)
-      // 斜率都是负的
-      if (phase1.slope > phase2.slope) {
-        // console.log('第一阶段更靠近球门走')
-        const slope = phase1.dx / (phase1.dy + phase2.dy)
-        const powerY = POWER * 5
-        const powerX = powerY * slope
-        const detalX = (phase1.dx + phase2.dx) / (phase2.dy + phase1.dy)
-        // console.log('y 方向的力更大:' + powerY, 'x 方向的力:' + powerX)
+  // if (phase1.dy < 0 && phase2.dy < 0) {
+  //   // 朝 球门 方向
+  //   if (phase1.dx > 0 && phase2.dx > 0) {
+  //     // 朝 X 轴正方向
+  //     // console.log('朝球门方向+X轴正方向')
+  //     // console.log(phase1.slope, phase2.slope)
+  //     // 斜率都是负的
+  //     if (phase1.slope > phase2.slope) {
+  //       // console.log('第一阶段更靠近球门走')
+  //       const slope = phase1.dx / (phase1.dy + phase2.dy)
+  //       const powerY = POWER * 5
+  //       const powerX = powerY * slope
+  //       const detalX = (phase1.dx + phase2.dx) / (phase2.dy + phase1.dy)
+  //       // console.log('y 方向的力更大:' + powerY, 'x 方向的力:' + powerX)
 
-        // TODO : detalX 的取值可能不太符合客观规律
-        return getParams(powerX, powerY, POWER, (detalX * 1000) / -10)
-      } else {
-        // console.log('第一阶段更靠近X轴走')
-        const slope = (phase1.dx + phase2.dx) / phase1.dy
-        const powerY = POWER * 5
-        const powerX = powerY * slope
-        const detalX = (phase1.dx + phase2.dx) / (phase2.dy + phase1.dy)
-        // console.log('X 方向的力更大:' + powerX, 'y 方向的力:' + powerY)
-        // TODO : detalX 的取值可能不太符合客观规律
-        console.log(detalX * 1000 * 1)
+  //       // TODO : detalX 的取值可能不太符合客观规律
+  //       return getParams(powerX, powerY, POWER, (detalX * 1000) / -10)
+  //     } else {
+  //       // console.log('第一阶段更靠近X轴走')
+  //       const slope = (phase1.dx + phase2.dx) / phase1.dy
+  //       const powerY = POWER * 5
+  //       const powerX = powerY * slope
+  //       const detalX = (phase1.dx + phase2.dx) / (phase2.dy + phase1.dy)
+  //       // console.log('X 方向的力更大:' + powerX, 'y 方向的力:' + powerY)
+  //       // TODO : detalX 的取值可能不太符合客观规律
+  //       console.log(detalX * 1000 * 1)
 
-        return getParams(powerX, powerY, POWER, (detalX * 1000) / 10)
-      }
-    } else if (phase1.dx < 0 && phase2.dx < 0) {
-      // 朝 X 轴负方向
-      // console.log('朝球门方向+X轴负方向')
-      // console.log(phase1.slope, phase2.slope)
-      if (phase1.slope > phase2.slope) {
-        // console.log('第一阶段更靠近X轴走')
-        const slope = phase1.dx / (phase1.dy + phase2.dy)
-        const powerY = POWER * 5
-        const powerX = powerY * slope
+  //       return getParams(powerX, powerY, POWER, (detalX * 1000) / 10)
+  //     }
+  //   } else if (phase1.dx < 0 && phase2.dx < 0) {
+  //     // 朝 X 轴负方向
+  //     // console.log('朝球门方向+X轴负方向')
+  //     // console.log(phase1.slope, phase2.slope)
+  //     if (phase1.slope > phase2.slope) {
+  //       // console.log('第一阶段更靠近X轴走')
+  //       const slope = phase1.dx / (phase1.dy + phase2.dy)
+  //       const powerY = POWER * 5
+  //       const powerX = powerY * slope
 
-        const detalX = (phase2.dy + phase1.dy) / (phase1.dx + phase2.dx)
+  //       const detalX = (phase2.dy + phase1.dy) / (phase1.dx + phase2.dx)
 
-        // console.log('y 方向的力更大:' + powerY, 'x 方向的力:' + powerX)
-        // TODO : detalX 的取值可能不太符合客观规律
-        return getParams(powerX, powerY, POWER, (detalX * 1000) / 100)
-      } else {
-        // console.log('第一阶段更靠近球门走')
-        const slope = (phase1.dx + phase2.dx) / phase1.dy
-        const powerY = POWER * 5
-        const powerX = powerY * slope
-        // console.log('y 方向的力更大:' + powerY, 'x 方向的力:' + powerX)
-        const detalX = (phase1.dx + phase2.dx) / (phase2.dy + phase1.dy)
-        // TODO : detalX 的取值可能不太符合客观规律
-        return getParams(powerX, powerY, POWER, detalX * -100)
-      }
-    } else {
-      console.log('不在上述条件下')
-      return actionParams
-    }
-  } else {
-    console.log('朝球门反方向')
-    return actionParams
-  }
+  //       // console.log('y 方向的力更大:' + powerY, 'x 方向的力:' + powerX)
+  //       // TODO : detalX 的取值可能不太符合客观规律
+  //       return getParams(powerX, powerY, POWER, (detalX * 1000) / 100)
+  //     } else {
+  //       // console.log('第一阶段更靠近球门走')
+  //       const slope = (phase1.dx + phase2.dx) / phase1.dy
+  //       const powerY = POWER * 5
+  //       const powerX = powerY * slope
+  //       // console.log('y 方向的力更大:' + powerY, 'x 方向的力:' + powerX)
+  //       const detalX = (phase1.dx + phase2.dx) / (phase2.dy + phase1.dy)
+  //       // TODO : detalX 的取值可能不太符合客观规律
+  //       return getParams(powerX, powerY, POWER, detalX * -100)
+  //     }
+  //   } else {
+  //     console.log('不在上述条件下')
+  //     return actionParams
+  //   }
+  // } else {
+  //   console.log('朝球门反方向')
+  //   return actionParams
+  // }
 }

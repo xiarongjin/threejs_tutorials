@@ -40,6 +40,7 @@ export const initBall = (world: RAPIER.World) => {
     destroy: () => {
       // console.log('destroy ball')
       body.resetForces(true)
+      body.resetTorques(true)
       body.applyImpulse(new RAPIER.Vector3(0, 0, 0), true)
       body.setTranslation({ x: 0, y: ballData.y, z: ballData.z }, true)
       body.setAngvel({ x: 0.0, y: 0.0, z: 0.0 }, true) // 角动量

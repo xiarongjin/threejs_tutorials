@@ -13,6 +13,7 @@ import GUI from 'lil-gui'
 import { initWall } from './wall'
 import { initTouchHandler } from './touchHandler'
 import { initTouchLine } from './touchLine'
+import { initPost } from './goal'
 export const initFootballGame = async () => {
   await RAPIER.init()
   const g = -9.8 * 3
@@ -73,6 +74,63 @@ export const initFootballGame = async () => {
   const wall = initWall(texture, world)
   scene.add(wall.mesh)
 
+  // 球门
+  // 门柱
+  // 左门柱
+  const leftPost = initPost(
+    {
+      width: 5,
+      height: 80,
+      depth: 5,
+      x: -40,
+      y: 0,
+      z: -60,
+      rotationX: 0,
+      rotationY: 0,
+      rotationZ: 0,
+      friction: 1, // 摩擦系数
+      restitution: 0.34 // 弹性系数
+    },
+    texture,
+    world
+  )
+  // 右门柱
+  const rightPost = initPost(
+    {
+      width: 5,
+      height: 80,
+      depth: 5,
+      x: 40,
+      y: 0,
+      z: -60,
+      rotationX: 0,
+      rotationY: 0,
+      rotationZ: 0,
+      friction: 1, // 摩擦系数
+      restitution: 0.34 // 弹性系数
+    },
+    texture,
+    world
+  )
+  // 横梁
+  const goalBeam = initPost(
+    {
+      width: 80,
+      height: 5,
+      depth: 5,
+      x: 0,
+      y: 40,
+      z: -60,
+      rotationX: 0,
+      rotationY: 0,
+      rotationZ: 0,
+      friction: 1, // 摩擦系数
+      restitution: 0.34 // 弹性系数
+    },
+    texture,
+    world
+  )
+  scene.add(leftPost.mesh, rightPost.mesh, goalBeam.mesh)
   // 交互
   const touchLine = initTouchLine(scene)
   const touchMoveHandler = (e: TouchEvent) => {
