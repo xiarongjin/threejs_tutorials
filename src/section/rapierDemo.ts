@@ -1,14 +1,14 @@
 import * as THREE from 'three'
 import Stats from 'three/addons/libs/stats.module.js'
-import { GUI } from 'three/addons/libs/lil-gui.module.min.js'
+// import { GUI } from 'three/addons/libs/lil-gui.module.min.js'
 import RAPIER from '@dimforge/rapier3d-compat'
 import {
-  lerp,
-  lightHelperControl,
+  // lerp,
+  // lightHelperControl,
   moveBall,
   RapierDebugRenderer
 } from './utils'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+// import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import CameraControls from 'camera-controls'
 await RAPIER.init() // This line is only needed if using the compat version
 const g = -9.8 * 3

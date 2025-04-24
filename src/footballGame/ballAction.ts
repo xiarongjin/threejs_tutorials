@@ -1,7 +1,7 @@
 import RAPIER from '@dimforge/rapier3d-compat'
 import * as THREE from 'three'
-import { lineWayToActionParams } from './lineWayToAction'
-import { addBallCollisionListener } from './utils'
+// import { lineWayToActionParams } from './lineWayToAction'
+// import { addBallCollisionListener } from './utils'
 import { ballTestAction } from './ballTestAction'
 export const ballAction = (
   body: RAPIER.RigidBody,
@@ -13,7 +13,7 @@ export const ballAction = (
     console.log(error)
   }
 
-  const actionParams = lineWayToActionParams(positions)
+  // const actionParams = lineWayToActionParams(positions)
   // body.applyTorqueImpulse(actionParams.torque, true)
 
   // // 瞬间给力

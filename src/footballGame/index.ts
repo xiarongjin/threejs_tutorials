@@ -1,6 +1,6 @@
 import RAPIER from '@dimforge/rapier3d-compat'
 import * as THREE from 'three'
-import { lightHelperControl, RapierDebugRenderer } from '../section/utils'
+import { RapierDebugRenderer } from '../section/utils'
 import { initLight } from './light'
 import { initCamera } from './camera'
 import { initBall } from './ball'

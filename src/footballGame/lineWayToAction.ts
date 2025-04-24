@@ -62,12 +62,12 @@ const getParams = (
 
 export const lineWayToActionParams = (lineWayPositions: THREE.Vector2[]) => {
   // 默认参数
-  const actionParams = {
-    impulse: new THREE.Vector3(400, 73, -1000), // 初始力
-    detalX: -9.8 * 30, // x 方向初引力
-    torque: new THREE.Vector3(552.0 * 10.3, 510 * 0, -500 * 0), // 初始扭矩(自转)
-    detalXSpeed: 0.1 // x 方向引力减弱强度
-  }
+  // const actionParams = {
+  //   impulse: new THREE.Vector3(400, 73, -1000), // 初始力
+  //   detalX: -9.8 * 30, // x 方向初引力
+  //   torque: new THREE.Vector3(552.0 * 10.3, 510 * 0, -500 * 0), // 初始扭矩(自转)
+  //   detalXSpeed: 0.1 // x 方向引力减弱强度
+  // }
 
   const keyPoints = filterPoint(lineWayPositions)
 
