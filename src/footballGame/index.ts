@@ -115,7 +115,7 @@ export const initFootballGame = async () => {
     touchEndHandler,
     touchStartHandler,
     initAction,
-    2000
+    3000
   )
 
   // 辅助界面

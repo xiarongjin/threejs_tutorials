@@ -50,13 +50,13 @@ const getParams = (
   powerY: number,
   POWER: number,
   detalX: number = 0,
-  detalXSpeed: number = 0
+  detalXSpeed: number = 0.01
 ) => {
   return {
     impulse: new THREE.Vector3(powerX, -POWER / 1.2, powerY),
-    torque: new THREE.Vector3(POWER * -5, POWER * -1, POWER * 1),
+    torque: new THREE.Vector3(POWER * -10, POWER * 0, POWER * 1),
     detalX: detalX,
-    detalXSpeed: detalXSpeed
+    detalXSpeed: detalX + detalXSpeed
   }
 }
 
@@ -77,7 +77,7 @@ export const lineWayToActionParams = (lineWayPositions: THREE.Vector2[]) => {
   // 球门方向为 y 轴负方向
   // 开口方向
 
-  const POWER = -1000 * 1 * 0.4
+  const POWER = -1000 * 1 * 0.5
 
   if (phase1.dy < 0 && phase2.dy < 0) {
     // 朝 球门 方向
@@ -91,20 +91,24 @@ export const lineWayToActionParams = (lineWayPositions: THREE.Vector2[]) => {
         const slope = phase1.dx / (phase1.dy + phase2.dy)
         const powerY = POWER * 5
         const powerX = powerY * slope
+        const detalX = (phase1.dx + phase2.dx) / (phase2.dy + phase1.dy)
         // console.log('y 方向的力更大:' + powerY, 'x 方向的力:' + powerX)
-        // TODO : 扭矩的调整与偏离角的叠加
-        return getParams(powerX, powerY, POWER)
+
+        // TODO : detalX 的取值可能不太符合客观规律
+        return getParams(powerX, powerY, POWER, (detalX * 1000) / -10)
       } else {
         // console.log('第一阶段更靠近X轴走')
         const slope = (phase1.dx + phase2.dx) / phase1.dy
         const powerY = POWER * 5
         const powerX = powerY * slope
+        const detalX = (phase1.dx + phase2.dx) / (phase2.dy + phase1.dy)
         // console.log('X 方向的力更大:' + powerX, 'y 方向的力:' + powerY)
-        // TODO : 扭矩的调整与偏离角的叠加
-        return getParams(powerX, powerY, POWER)
+        // TODO : detalX 的取值可能不太符合客观规律
+        console.log(detalX * 1000 * 1)
+
+        return getParams(powerX, powerY, POWER, (detalX * 1000) / 10)
       }
-    }
-    if (phase1.dx < 0 && phase2.dx < 0) {
+    } else if (phase1.dx < 0 && phase2.dx < 0) {
       // 朝 X 轴负方向
       // console.log('朝球门方向+X轴负方向')
       // console.log(phase1.slope, phase2.slope)
@@ -113,18 +117,25 @@ export const lineWayToActionParams = (lineWayPositions: THREE.Vector2[]) => {
         const slope = phase1.dx / (phase1.dy + phase2.dy)
         const powerY = POWER * 5
         const powerX = powerY * slope
+
+        const detalX = (phase2.dy + phase1.dy) / (phase1.dx + phase2.dx)
+
         // console.log('y 方向的力更大:' + powerY, 'x 方向的力:' + powerX)
-        // TODO : 扭矩的调整与偏离角的叠加
-        return getParams(powerX, powerY, POWER)
+        // TODO : detalX 的取值可能不太符合客观规律
+        return getParams(powerX, powerY, POWER, (detalX * 1000) / 100)
       } else {
         // console.log('第一阶段更靠近球门走')
         const slope = (phase1.dx + phase2.dx) / phase1.dy
         const powerY = POWER * 5
         const powerX = powerY * slope
         // console.log('y 方向的力更大:' + powerY, 'x 方向的力:' + powerX)
-        // TODO : 扭矩的调整与偏离角的叠加
-        return getParams(powerX, powerY, POWER)
+        const detalX = (phase1.dx + phase2.dx) / (phase2.dy + phase1.dy)
+        // TODO : detalX 的取值可能不太符合客观规律
+        return getParams(powerX, powerY, POWER, detalX * -100)
       }
+    } else {
+      console.log('不在上述条件下')
+      return actionParams
     }
   } else {
     console.log('朝球门反方向')
