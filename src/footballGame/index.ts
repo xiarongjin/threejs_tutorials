@@ -74,7 +74,51 @@ export const initFootballGame = async () => {
   // 挡板
   const wall = initWall(texture, world)
   scene.add(wall.mesh)
-
+  // 左挡
+  const leftWall = initWall(texture, world, {
+    width: 700,
+    height: 700,
+    depth: 0.5,
+    x: -300,
+    y: -200,
+    z: 0,
+    rotationX: 0,
+    rotationY: Math.PI / 2,
+    rotationZ: 0,
+    friction: 1, // 摩擦系数,
+    restitution: 0 // 弹性系数
+  })
+  scene.add(leftWall.mesh)
+  // 右挡
+  const rWall = initWall(texture, world, {
+    width: 700,
+    height: 700,
+    depth: 0.5,
+    x: 300,
+    y: -200,
+    z: 0,
+    rotationX: 0,
+    rotationY: -Math.PI / 2,
+    rotationZ: 0,
+    friction: 1, // 摩擦系数,
+    restitution: 0 // 弹性系数
+  })
+  scene.add(rWall.mesh)
+  // 后档
+  const bWall = initWall(texture, world, {
+    width: 700,
+    height: 700,
+    depth: 0.5,
+    x: 0,
+    y: -200,
+    z: 350,
+    rotationX: 0,
+    rotationY: 0,
+    rotationZ: 0,
+    friction: 1, // 摩擦系数,
+    restitution: 0 // 弹性系数
+  })
+  scene.add(bWall.mesh)
   // 球门
   // 门柱
   // 左门柱

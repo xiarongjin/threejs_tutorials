@@ -2,20 +2,24 @@ import RAPIER from '@dimforge/rapier3d-compat'
 import * as THREE from 'three'
 import { MeshColliderBuilder } from './meshColliderBuilder'
 
-export const initWall = (texture: THREE.Texture, world: RAPIER.World) => {
-  const wallData = {
-    width: 600,
-    height: 600,
+export const initWall = (
+  texture: THREE.Texture,
+  world: RAPIER.World,
+  data = {
+    width: 700,
+    height: 700,
     depth: 0.5,
     x: 0,
-    y: -200,
-    z: -170,
+    y: -220,
+    z: -220,
     rotationX: 0,
     rotationY: 0,
     rotationZ: 0,
-    friction: 1, // 摩擦系数
+    friction: 1, // 摩擦系数,
     restitution: 0.34 // 弹性系数
   }
+) => {
+  const wallData = data
   const wallGeometry = new THREE.BoxGeometry(
     wallData.width,
     wallData.height,
